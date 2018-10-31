@@ -164,13 +164,9 @@
   dependencies:
     "@types/angular" "*"
 
-"@types/angular@*", "@types/angular@1.6.26", "@types/angular@^1.6.16":
-  version "1.6.26"
-  resolved "https://registry.yarnpkg.com/@types/angular/-/angular-1.6.26.tgz#a96cccef648de0bf7435f3b9bad13f2430719305"
-
-"@types/angular@>=1.5", "@types/angular@^1.6.34", "@types/angular@^1.6.39":
-  version "1.6.43"
-  resolved "https://registry.yarnpkg.com/@types/angular/-/angular-1.6.43.tgz#6235ef416053a86302970717510a936d889cbb9a"
+"@types/angular@*", "@types/angular@1.6.51", "@types/angular@>=1.5", "@types/angular@^1.6.16", "@types/angular@^1.6.34", "@types/angular@^1.6.39":
+  version "1.6.51"
+  resolved "https://registry.yarnpkg.com/@types/angular/-/angular-1.6.51.tgz#a67515b0ba6a2ff68894a39405c1343cbf9c36d4"
 
 "@types/cheerio@*":
   version "0.22.1"
@@ -825,13 +821,9 @@ angular2react@^3.0.2:
     lodash.kebabcase "^4.1.1"
     ngimport "^1.0.0"
 
-angular@>=1.5:
+angular@>=1.5, angular@>=1.5.0, angular@^1.4.0, angular@~1.6.3:
   version "1.6.9"
   resolved "https://registry.yarnpkg.com/angular/-/angular-1.6.9.tgz#bc812932e18909038412d594a5990f4bb66c0619"
-
-angular@>=1.5.0, angular@^1.4.0, angular@~1.6.3:
-  version "1.6.4"
-  resolved "https://registry.yarnpkg.com/angular/-/angular-1.6.4.tgz#03b7b15c01a0802d7e2cf593240e604054dc77fb"
 
 angulartics-google-analytics@^0.2.0:
   version "0.2.1"
