@@ -372,9 +372,9 @@
     "@types/d3-voronoi" "*"
     "@types/d3-zoom" "*"
 
-"@types/dompurify@^0.0.29":
-  version "0.0.29"
-  resolved "https://registry.yarnpkg.com/@types/dompurify/-/dompurify-0.0.29.tgz#3a774b80a709848e560fbf9ea62d5f716e79b6f2"
+"@types/dompurify@^0.0.31":
+  version "0.0.31"
+  resolved "https://registry.yarnpkg.com/@types/dompurify/-/dompurify-0.0.31.tgz#f152d5a81f2b5625e29f11eb016cd9b301d0d4b4"
 
 "@types/enzyme@^3.1.10":
   version "3.1.10"
