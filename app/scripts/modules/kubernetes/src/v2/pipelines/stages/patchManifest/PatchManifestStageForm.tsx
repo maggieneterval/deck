@@ -89,10 +89,6 @@ export class PatchManifestStageForm extends React.Component<
     this.props.formik.setFieldValue('patchBody', manifests[0]);
   };
 
-  private onManifestSelectorChange = (): void => {
-    this.props.stageFieldUpdated();
-  };
-
   private getSourceOptions = (): Array<Option<string>> => {
     return map([this.textSource, this.artifactSource], option => ({
       label: capitalize(option),
@@ -107,9 +103,8 @@ export class PatchManifestStageForm extends React.Component<
         <h4>Resource to Patch</h4>
         <ManifestSelector
           application={this.props.application}
+          formik={this.props.formik}
           modes={[SelectorMode.Static, SelectorMode.Dynamic]}
-          onChange={this.onManifestSelectorChange}
-          selector={stage as any}
         />
         <hr />
         <h4>Patch Content</h4>

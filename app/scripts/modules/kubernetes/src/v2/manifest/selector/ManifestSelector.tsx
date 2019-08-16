@@ -1,425 +1,214 @@
 import * as React from 'react';
 import Select, { Creatable, Option } from 'react-select';
-import { IPromise } from 'angular';
-import { Observable, Subject } from 'rxjs';
-import { $q } from 'ngimport';
 import { get, isEmpty } from 'lodash';
+import * as DOMPurify from 'dompurify';
+import { FormikProps } from 'formik';
 
 import {
-  AppListExtractor,
-  Application,
-  NgReact,
-  StageConstants,
-  IAccountDetails,
-  SETTINGS,
-  StageConfigField,
-  AccountSelectInput,
   AccountService,
-  noop,
-  ScopeClusterSelector,
-  IServerGroup,
+  Application,
+  FormField,
+  FormikFormField,
+  IStage,
+  ReactSelectInput,
+  StageConstants,
+  useLatestPromise,
 } from '@spinnaker/core';
 
-import {
-  IManifestSelector,
-  SelectorMode,
-  SelectorModeDataMap,
-} from 'kubernetes/v2/manifest/selector/IManifestSelector';
-import { ManifestKindSearchService } from 'kubernetes/v2/manifest/ManifestKindSearch';
+import { IManifestSelector, SelectorMode } from 'kubernetes/v2/manifest/selector/IManifestSelector';
 import LabelEditor from 'kubernetes/v2/manifest/selector/labelEditor/LabelEditor';
 import { IManifestLabelSelector } from 'kubernetes/v2/manifest/selector/IManifestLabelSelector';
+import { ResourceSelectionMethod } from 'kubernetes/v2/manifest/selector/ResourceSelectionMethod';
+import { ClusterSelector } from 'kubernetes/v2/manifest/selector/ClusterSelector';
+import { ResourceNameSelector } from 'kubernetes/v2/manifest/selector/ResourceNameSelector';
+import { parseSpinnakerName } from 'kubernetes/v2/manifest/selector/resourceSelectorUtilities';
+
+export type IResourceStage = IStage & IManifestSelector;
 
 export interface IManifestSelectorProps {
-  selector: IManifestSelector;
   application?: Application;
   includeSpinnakerKinds?: string[];
-  modes?: SelectorMode[];
-  onChange(selector: IManifestSelector): void;
+  modes: SelectorMode[];
+  formik: FormikProps<IStage>;
 }
 
-export interface IManifestSelectorState {
-  accounts: IAccountDetails[];
-  selector: IManifestSelector;
-  namespaces: string[];
-  kinds: string[];
-  resources: string[];
-  loading: boolean;
-}
+const promptTextCreator = (text: string) => `Use custom expression: ${text}`;
+const isExpression = (value: string): boolean => (typeof value === 'string' ? value.includes('${') : false);
 
-interface ISelectorHandler {
-  handles(mode: SelectorMode): boolean;
-  handleModeChange(): void;
-  handleKindChange(kind: string): void;
-  getKind(): string;
-}
+export function ManifestSelector({ application, includeSpinnakerKinds = [], modes, formik }: IManifestSelectorProps) {
+  const selector = formik.values;
+  const selectedMode = selector.mode || modes[0];
 
-const parseSpinnakerName = (spinnakerName: string): { name: string; kind: string } => {
-  const [kind, name] = (spinnakerName || '').split(' ');
-  return { kind, name };
-};
+  // Fetch all accounts, and memoize details for selected account
+  const fetchAccounts = useLatestPromise(() => AccountService.getAllAccountDetailsForProvider('kubernetes', 'v2'), []);
+  const accountsLoaded = fetchAccounts.status === 'RESOLVED';
+  const accounts = fetchAccounts.result || [];
+  const selectedAccountDetails = React.useMemo(() => accounts.find(a => a.name === selector.account), [
+    accounts,
+    selector.account,
+  ]);
 
-class StaticManifestSelectorHandler implements ISelectorHandler {
-  constructor(private component: ManifestSelector) {}
+  // Memoize namespace options available for selected account
+  const namespaces = React.useMemo(() => get(selectedAccountDetails, 'namespaces', [].sort()), [
+    selectedAccountDetails,
+  ]);
 
-  public handles = (mode: SelectorMode): boolean => mode === SelectorMode.Static;
-
-  public handleModeChange = (): void => {
-    const { selector } = this.component.state;
-    this.handleKindChange(selector.kind);
-    Object.assign(selector, SelectorModeDataMap.static.selectorDefaults);
-    this.component.setStateAndUpdateStage({ selector });
-  };
-
-  public handleKindChange = (kind: string): void => {
-    const { selector } = this.component.state;
-    const { name } = parseSpinnakerName(selector.manifestName);
-    selector.manifestName = kind ? (name ? `${kind} ${name}` : kind) : name;
-  };
-
-  public getKind = (): string => parseSpinnakerName(this.component.state.selector.manifestName).kind;
-}
-
-class DynamicManifestSelectorHandler implements ISelectorHandler {
-  constructor(private component: ManifestSelector) {}
-
-  public handles = (mode: SelectorMode): boolean => mode === SelectorMode.Dynamic;
-
-  public handleModeChange = (): void => {
-    const { selector } = this.component.state;
-    const { kind } = parseSpinnakerName(selector.manifestName);
-    selector.kind = kind || null;
-    Object.assign(selector, SelectorModeDataMap.dynamic.selectorDefaults);
-    this.component.setStateAndUpdateStage({ selector });
-  };
-
-  public handleKindChange = (kind: string): void => {
-    this.component.state.selector.kind = kind;
-  };
-
-  public getKind = (): string => this.component.state.selector.kind;
-}
-
-class LabelManifestSelectorHandler implements ISelectorHandler {
-  constructor(private component: ManifestSelector) {}
-
-  public handles = (mode: SelectorMode): boolean => mode === SelectorMode.Label;
-
-  public handleModeChange = (): void => {
-    const { selector } = this.component.state;
-    Object.assign(selector, SelectorModeDataMap.label.selectorDefaults);
-    this.component.setStateAndUpdateStage({ selector });
-  };
-
-  public handleKindChange = (): void => {};
-
-  public getKind = (): string => null;
-}
-
-export class ManifestSelector extends React.Component<IManifestSelectorProps, IManifestSelectorState> {
-  private search$ = new Subject<{ kind: string; namespace: string; account: string }>();
-  private destroy$ = new Subject<void>();
-  private handlers: ISelectorHandler[];
-
-  constructor(props: IManifestSelectorProps) {
-    super(props);
-
-    if (!this.props.selector.mode) {
-      this.props.selector.mode = SelectorMode.Static;
-      this.props.onChange && this.props.onChange(this.props.selector);
-    }
-
-    this.state = {
-      selector: props.selector,
-      accounts: [],
-      namespaces: [],
-      kinds: [],
-      resources: [],
-      loading: false,
-    };
-    this.handlers = [
-      new StaticManifestSelectorHandler(this),
-      new DynamicManifestSelectorHandler(this),
-      new LabelManifestSelectorHandler(this),
-    ];
-  }
-
-  public setStateAndUpdateStage = (state: Partial<IManifestSelectorState>, cb?: () => void): void => {
-    if (state.selector && this.props.onChange) {
-      this.props.onChange(state.selector);
-    }
-    this.setState(state as IManifestSelectorState, cb || noop);
-  };
-
-  public componentDidMount = (): void => {
-    this.loadAccounts();
-
-    this.search$
-      .do(() => this.setStateAndUpdateStage({ loading: true }))
-      .switchMap(({ kind, namespace, account }) => Observable.fromPromise(this.search(kind, namespace, account)))
-      .takeUntil(this.destroy$)
-      .subscribe(resources => {
-        if (this.state.selector.manifestName == null && this.getSelectedMode() === SelectorMode.Static) {
-          this.handleNameChange('');
-        }
-        this.setStateAndUpdateStage({ loading: false, resources: resources, selector: this.state.selector });
-      });
-  };
-
-  public componentWillUnmount = () => this.destroy$.next();
-
-  public loadAccounts = (): IPromise<void> => {
-    return AccountService.getAllAccountDetailsForProvider('kubernetes', 'v2').then(accounts => {
-      const selector = this.state.selector;
-      const kind = parseSpinnakerName(selector.manifestName).kind;
-
-      this.setStateAndUpdateStage({ accounts });
-
-      if (!selector.account && accounts.length > 0) {
-        selector.account = accounts.some(e => e.name === SETTINGS.providers.kubernetes.defaults.account)
-          ? SETTINGS.providers.kubernetes.defaults.account
-          : accounts[0].name;
-      }
-      if (selector.account) {
-        this.handleAccountChange(selector.account);
-      }
-      if (kind) {
-        this.search$.next({ kind, namespace: selector.location, account: selector.account });
-      }
-    });
-  };
-
-  private handleAccountChange = (selectedAccount: string): void => {
-    const details = (this.state.accounts || []).find(account => account.name === selectedAccount);
-    if (!details) {
+  // When namespace options change, ensure selected namespace is still available
+  React.useEffect(() => {
+    if (!accountsLoaded) {
       return;
     }
-    const namespaces = (details.namespaces || []).sort();
-    const kinds = Object.entries(details.spinnakerKindMap || {})
+    if (!isExpression(formik.values.location) && !namespaces.includes(selector.location)) {
+      formik.setFieldValue('location', null);
+    }
+  }, [namespaces]);
+
+  // Memoize kind options available for selected account
+  const kinds = React.useMemo(() => {
+    if (!selectedAccountDetails) {
+      return [];
+    }
+    return Object.entries(selectedAccountDetails.spinnakerKindMap || {})
       .filter(([, spinnakerKind]) =>
-        this.props.includeSpinnakerKinds && this.props.includeSpinnakerKinds.length
-          ? this.props.includeSpinnakerKinds.includes(spinnakerKind)
-          : true,
+        !isEmpty(includeSpinnakerKinds) ? includeSpinnakerKinds.includes(spinnakerKind) : true,
       )
       .map(([kind]) => kind)
       .sort();
+  }, [selectedAccountDetails]);
 
-    if (
-      !this.isExpression(this.state.selector.location) &&
-      namespaces.every(ns => ns !== this.state.selector.location)
-    ) {
-      this.state.selector.location = null;
+  // Derive kind from manifestName in Static mode only
+  const selectedKind = React.useMemo(() => {
+    if (selectedMode === SelectorMode.Static) {
+      return parseSpinnakerName(selector.manifestName).kind;
     }
-    this.state.selector.account = selectedAccount;
+    return selector.kind;
+  }, [selectedMode, selector.manifestName, selector.kind]);
+  const setSelectedKind = React.useCallback(
+    (kind: string) => {
+      if (selector.mode === SelectorMode.Static) {
+        const { name } = parseSpinnakerName(selector.manifestName);
+        formik.setFieldValue('manifestName', kind ? (name ? `${kind} ${name}` : kind) : name);
+      } else {
+        formik.setFieldValue('kind', kind);
+      }
+    },
+    [selector.mode],
+  );
 
-    this.search$.next({
-      kind: parseSpinnakerName(this.state.selector.manifestName).kind || this.state.selector.kind,
-      namespace: this.state.selector.location,
-      account: this.state.selector.account,
-    });
-    this.setStateAndUpdateStage({
-      namespaces,
-      kinds,
-      selector: this.state.selector,
-    });
-  };
-
-  private handleNamespaceChange = (selectedNamespace: Option): void => {
-    this.state.selector.location =
-      selectedNamespace && selectedNamespace.value ? (selectedNamespace.value as string) : null;
-    this.search$.next({
-      kind: parseSpinnakerName(this.state.selector.manifestName).kind,
-      namespace: this.state.selector.location,
-      account: this.state.selector.account,
-    });
-    this.setStateAndUpdateStage({ selector: this.state.selector });
-  };
-
-  public handleKindChange = (kind: string): void => {
-    this.modeDelegate().handleKindChange(kind);
-    this.search$.next({ kind: kind, namespace: this.state.selector.location, account: this.state.selector.account });
-  };
-
-  private handleNameChange = (selectedName: string): void => {
-    const { kind } = parseSpinnakerName(this.state.selector.manifestName);
-    this.state.selector.manifestName = kind ? `${kind} ${selectedName}` : ` ${selectedName}`;
-    this.setStateAndUpdateStage({ selector: this.state.selector });
-  };
-
-  private isExpression = (value: string): boolean => (typeof value === 'string' ? value.includes('${') : false);
-
-  private search = (kind: string, namespace: string, account: string): IPromise<string[]> => {
-    if (this.isExpression(account)) {
-      return $q.resolve([]);
-    }
-    return ManifestKindSearchService.search(kind, namespace, account).then(results =>
-      results.map(result => result.name).sort(),
-    );
-  };
-
-  private handleModeSelect = (mode: SelectorMode) => {
-    this.state.selector.mode = mode;
-    this.setStateAndUpdateStage({ selector: this.state.selector }, () => {
-      this.modeDelegate().handleModeChange();
-    });
-  };
-
-  private handleClusterChange = ({ clusterName }: { clusterName: string }) => {
-    this.state.selector.cluster = clusterName;
-    this.setStateAndUpdateStage({ selector: this.state.selector });
-  };
-
-  private handleCriteriaChange = (criteria: string) => {
-    this.state.selector.criteria = criteria;
-    this.setStateAndUpdateStage({ selector: this.state.selector });
-  };
-
-  public handleKindsChange = (kinds: string[]): void => {
-    this.state.selector.kinds = kinds;
-    this.setStateAndUpdateStage({ selector: this.state.selector });
-  };
-
-  public handleLabelSelectorsChange = (labelSelectors: IManifestLabelSelector[]): void => {
-    this.state.selector.labelSelectors.selectors = labelSelectors;
-    this.setStateAndUpdateStage({ selector: this.state.selector });
-  };
-
-  private modeDelegate = (): ISelectorHandler => this.handlers.find(handler => handler.handles(this.getSelectedMode()));
-
-  private promptTextCreator = (text: string) => `Use custom expression: ${text}`;
-
-  private getSelectedMode = (): SelectorMode => this.state.selector.mode || SelectorMode.Static;
-
-  private getFilteredClusters = (): string[] => {
-    const { application, includeSpinnakerKinds } = this.props;
-    const { selector } = this.state;
-    const applications = application ? [application] : [];
-    // If the only whitelisted Spinnaker kind is `serverGroups`, exclude server groups with `serverGroupManagers`.
-    // This is because traffic management stages only allow ReplicaSets.
-    const includeServerGroupsWithManagers: boolean =
-      isEmpty(includeSpinnakerKinds) || includeSpinnakerKinds.length > 1 || includeSpinnakerKinds[0] !== 'serverGroups';
-    const filter = (serverGroup: IServerGroup): boolean => {
-      const accountAndNamespaceFilter: boolean = AppListExtractor.clusterFilterForCredentialsAndRegion(
-        selector.account,
-        selector.location,
-      )(serverGroup);
-      const hasServerGroupManagers: boolean = get(serverGroup, 'serverGroupManagers.length', 0) > 0;
-      const serverGroupManagerFilter: boolean = includeServerGroupsWithManagers || !hasServerGroupManagers;
-      const nameToParseKind: string = hasServerGroupManagers ? serverGroup.cluster : serverGroup.name;
-      const kindFilter: boolean = parseSpinnakerName(nameToParseKind).kind === this.modeDelegate().getKind();
-      return accountAndNamespaceFilter && serverGroupManagerFilter && kindFilter;
-    };
-    return AppListExtractor.getClusters(applications, filter);
-  };
-
-  public render() {
-    const { TargetSelect } = NgReact;
-    const selectedMode = this.getSelectedMode();
-    const modes = this.props.modes || [selectedMode];
-    const { selector, accounts, kinds, namespaces, resources, loading } = this.state;
-    const kind = this.modeDelegate().getKind();
-    const name = parseSpinnakerName(selector.manifestName).name;
-    const resourceNames = resources.map(resource => parseSpinnakerName(resource).name);
-    const selectedKinds = selector.kinds || [];
-    const KindField = (
-      <StageConfigField label="Kind">
-        <Creatable
-          clearable={false}
-          value={{ value: kind, label: kind }}
-          options={kinds.map(k => ({ value: k, label: k }))}
-          onChange={(option: Option<string>) => this.handleKindChange(option && option.value)}
-          promptTextCreator={this.promptTextCreator}
-        />
-      </StageConfigField>
-    );
-
-    return (
-      <>
-        <StageConfigField label="Account">
-          <AccountSelectInput
-            value={selector.account}
-            onChange={(evt: any) => this.handleAccountChange(evt.target.value)}
-            accounts={accounts}
-            provider="'kubernetes'"
-          />
-        </StageConfigField>
-        <StageConfigField label="Namespace">
-          <Creatable
+  return (
+    <>
+      <h4>Resource Selection</h4>
+      <div className="horizontal-rule" />
+      <ResourceSelectionMethod modes={modes} formik={formik} />
+      <FormikFormField
+        fastField={false}
+        input={props => (
+          <ReactSelectInput
+            {...props}
             clearable={false}
-            value={{ value: selector.location, label: selector.location }}
-            options={namespaces.map(ns => ({ value: ns, label: ns }))}
-            onChange={this.handleNamespaceChange}
-            promptTextCreator={this.promptTextCreator}
+            disabled={!accountsLoaded}
+            isLoading={fetchAccounts.status === 'PENDING'}
+            placeholder={null}
+            stringOptions={accounts.map(a => a.name)}
           />
-        </StageConfigField>
-        {!modes.includes(SelectorMode.Label) && KindField}
-        {modes.length > 1 && (
-          <StageConfigField label="Selector">
-            {modes.map(mode => (
-              <div className="radio" key={mode}>
-                <label htmlFor={mode}>
-                  <input
-                    type="radio"
-                    onChange={() => this.handleModeSelect(mode)}
-                    checked={selectedMode === mode}
-                    id={mode}
-                  />{' '}
-                  {get(SelectorModeDataMap, [mode, 'label'], '')}
-                </label>
-              </div>
-            ))}
-          </StageConfigField>
         )}
-        {modes.includes(SelectorMode.Label) && selectedMode !== SelectorMode.Label && KindField}
-        {modes.includes(SelectorMode.Static) && selectedMode === SelectorMode.Static && (
-          <StageConfigField label="Name">
-            <Creatable
-              isLoading={loading}
+        label="Account"
+        name="account"
+      />
+      <FormField
+        input={props => (
+          <Creatable
+            {...props}
+            clearable={false}
+            options={namespaces.map(ns => ({ value: ns, label: ns }))}
+            placeholder={null}
+            promptTextCreator={promptTextCreator}
+          />
+        )}
+        label="Namespace"
+        onChange={(option: Option<string>) => formik.setFieldValue('location', option.value)}
+        value={{ value: selector.location, label: selector.location }}
+      />
+      {selectedMode !== SelectorMode.Label && (
+        <FormField
+          input={props => (
+            <ReactSelectInput
+              {...props}
               clearable={false}
-              value={{ value: name, label: name }}
-              options={resourceNames.map(r => ({ value: r, label: r }))}
-              onChange={(option: Option) => this.handleNameChange(option ? (option.value as string) : '')}
-              promptTextCreator={this.promptTextCreator}
+              options={kinds.map(k => ({ value: k, label: k }))}
+              placeholder={null}
             />
-          </StageConfigField>
-        )}
-        {modes.includes(SelectorMode.Dynamic) && selectedMode === SelectorMode.Dynamic && (
-          <>
-            <StageConfigField label="Cluster">
-              <ScopeClusterSelector
-                clusters={this.getFilteredClusters()}
-                model={selector.cluster}
-                onChange={this.handleClusterChange}
-              />
-            </StageConfigField>
-            <StageConfigField label="Target">
-              <TargetSelect
-                onChange={this.handleCriteriaChange}
-                model={{ target: selector.criteria }}
-                options={StageConstants.MANIFEST_CRITERIA_OPTIONS}
-              />
-            </StageConfigField>
-          </>
-        )}
-        {modes.includes(SelectorMode.Label) && selectedMode === SelectorMode.Label && (
-          <>
-            <StageConfigField label="Kinds">
-              <Select
-                clearable={false}
-                multi={true}
-                value={selectedKinds}
-                options={kinds.map(k => ({ value: k, label: k }))}
-                onChange={(options: Array<Option<string>>) => this.handleKindsChange(options.map(o => o.value))}
-              />
-            </StageConfigField>
-            <StageConfigField label="Labels">
-              <LabelEditor
-                labelSelectors={get(selector, 'labelSelectors.selectors', [])}
-                onLabelSelectorsChange={this.handleLabelSelectorsChange}
-              />
-            </StageConfigField>
-          </>
-        )}
-      </>
-    );
-  }
+          )}
+          label="Kind"
+          onChange={(e: React.ChangeEvent<any>) => setSelectedKind(e.target.value)}
+          value={selectedKind}
+        />
+      )}
+      {selectedMode === SelectorMode.Static && <ResourceNameSelector formik={formik} />}
+      {selectedMode === SelectorMode.Dynamic && (
+        <ClusterSelector
+          applications={application ? [application] : []}
+          formik={formik}
+          includeSpinnakerKinds={includeSpinnakerKinds}
+        />
+      )}
+      {selectedMode === SelectorMode.Dynamic && (
+        <FormField
+          input={props => (
+            <Select
+              {...props}
+              clearable={false}
+              options={StageConstants.MANIFEST_CRITERIA_OPTIONS}
+              optionRenderer={option => (
+                <div className="body-regular">
+                  <strong>
+                    <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(option.label) }} />
+                  </strong>
+                  <div>
+                    <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(option.description) }} />
+                  </div>
+                </div>
+              )}
+              placeholder={null}
+              valueKey="val"
+              valueRenderer={o => <>{o.label}</>}
+            />
+          )}
+          value={selector.criteria}
+          label="Target"
+          onChange={(option: Option) => formik.setFieldValue('criteria', option.val)}
+        />
+      )}
+      {selectedMode === SelectorMode.Label && (
+        <FormField
+          input={props => (
+            <ReactSelectInput
+              {...props}
+              clearable={false}
+              multi={true}
+              options={kinds.map(k => ({ value: k, label: k }))}
+              placeholder={null}
+            />
+          )}
+          label="Kinds"
+          onChange={(e: React.ChangeEvent<any>) => formik.setFieldValue('kinds', e.target.value)}
+          value={selector.kinds || []}
+        />
+      )}
+      {selectedMode === SelectorMode.Label && (
+        <FormField
+          input={props => (
+            <LabelEditor
+              {...props}
+              labelSelectors={get(selector, 'labelSelectors.selectors', [])}
+              onLabelSelectorsChange={(selectors: IManifestLabelSelector[]) =>
+                formik.setFieldValue('labelSelectors', { selectors })
+              }
+            />
+          )}
+          label="Labels"
+        />
+      )}
+    </>
+  );
 }

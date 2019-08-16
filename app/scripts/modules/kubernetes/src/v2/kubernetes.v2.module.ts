@@ -5,9 +5,6 @@ import { CloudProviderRegistry, STAGE_ARTIFACT_SELECTOR_COMPONENT_REACT, YAML_ED
 import { KUBERNETES_MANIFEST_DELETE_CTRL } from './manifest/delete/delete.controller';
 import { KUBERNETES_MANIFEST_SCALE_CTRL } from './manifest/scale/scale.controller';
 import { KUBERNETES_V2_INSTANCE_DETAILS_CTRL } from './instance/details/details.controller';
-import { KUBERNETES_SCALE_MANIFEST_STAGE } from './pipelines/stages/scaleManifest/scaleManifestStage';
-import { KUBERNETES_UNDO_ROLLOUT_MANIFEST_STAGE } from './pipelines/stages/undoRolloutManifest/undoRolloutManifestStage';
-import { KUBERNETES_FIND_ARTIFACTS_FROM_RESOURCE_STAGE } from './pipelines/stages/findArtifactsFromResource/findArtifactsFromResourceStage';
 import { KUBERNETES_V2_LOAD_BALANCER_DETAILS_CTRL } from './loadBalancer/details/details.controller';
 import { KUBERNETES_V2_SECURITY_GROUP_DETAILS_CTRL } from './securityGroup/details/details.controller';
 import { KUBERNETES_V2_SERVER_GROUP_TRANSFORMER } from './serverGroup/serverGroupTransformer.service';
@@ -21,7 +18,6 @@ import { KUBERNETES_MANIFEST_RESUME_ROLLOUT_CTRL } from './manifest/rollout/resu
 import { KUBERNETES_MANIFEST_STATUS } from './manifest/status/status.component';
 import { KUBERNETES_MANIFEST_CONDITION } from './manifest/status/condition.component';
 import { KUBERNETES_MANIFEST_ARTIFACT } from './manifest/artifact/artifact.component';
-import { KUBERNETES_MANIFEST_SELECTOR } from './manifest/selector/selector.component';
 import { KUBERNETES_MANIFEST_LABELS } from './manifest/manifestLabels.component';
 import { KUBERNETES_MANIFEST_EVENTS } from './manifest/manifestEvents.component';
 import { KUBERNETES_MANIFEST_RESOURCES } from './manifest/manifestResources.component';
@@ -33,8 +29,6 @@ import { KUBERNETES_V2_RESOURCE_STATES } from './resources/resources.state';
 import { KUBERNETES_MANIFEST_IMAGE_DETAILS } from 'kubernetes/v2/manifest/manifestImageDetails.component';
 import { JSON_EDITOR_COMPONENT } from './manifest/editor/json/jsonEditor.component';
 import { ManifestWizard } from 'kubernetes/v2/manifest/wizard/ManifestWizard';
-import { KUBERNETES_ENABLE_MANIFEST_STAGE } from 'kubernetes/v2/pipelines/stages/traffic/enableManifest.stage';
-import { KUBERNETES_DISABLE_MANIFEST_STAGE } from 'kubernetes/v2/pipelines/stages/traffic/disableManifest.stage';
 import { KubernetesSecurityGroupReader } from 'kubernetes/shared/securityGroup/securityGroup.reader';
 import { KUBERNETES_ROLLING_RESTART } from 'kubernetes/v2/manifest/rollout/RollingRestart';
 
@@ -42,7 +36,6 @@ import 'kubernetes/shared/validation/applicationName.validator';
 import 'kubernetes/shared/help/kubernetes.help';
 import 'kubernetes/shared/logo/kubernetes.logo.less';
 import 'kubernetes/v2/pipelines/stages';
-import 'kubernetes/v2/pipelines/validation/manifestSelector.validator';
 
 // load all templates into the $templateCache
 const templates = require.context('kubernetes', true, /\.html$/);
@@ -72,10 +65,6 @@ module(KUBERNETES_V2_MODULE, [
   KUBERNETES_MANIFEST_ARTIFACT,
   KUBERNETES_V2_LOAD_BALANCER_TRANSFORMER,
   KUBERNETES_V2_SECURITY_GROUP_TRANSFORMER,
-  KUBERNETES_SCALE_MANIFEST_STAGE,
-  KUBERNETES_UNDO_ROLLOUT_MANIFEST_STAGE,
-  KUBERNETES_FIND_ARTIFACTS_FROM_RESOURCE_STAGE,
-  KUBERNETES_MANIFEST_SELECTOR,
   KUBERNETES_MANIFEST_LABELS,
   KUBERNETES_MANIFEST_EVENTS,
   KUBERNETES_MANIFEST_RESOURCES,
@@ -85,8 +74,6 @@ module(KUBERNETES_V2_MODULE, [
   KUBERNETES_V2_RESOURCE_STATES,
   YAML_EDITOR_COMPONENT,
   JSON_EDITOR_COMPONENT,
-  KUBERNETES_ENABLE_MANIFEST_STAGE,
-  KUBERNETES_DISABLE_MANIFEST_STAGE,
   STAGE_ARTIFACT_SELECTOR_COMPONENT_REACT,
   KUBERNETES_ROLLING_RESTART,
 ]).config(() => {

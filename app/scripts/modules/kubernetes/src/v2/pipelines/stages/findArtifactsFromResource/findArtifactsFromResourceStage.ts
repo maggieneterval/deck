@@ -1,31 +1,17 @@
-import { module } from 'angular';
+import { Registry, ExecutionDetailsTasks, ExecutionArtifactTab } from '@spinnaker/core';
 
-import { Registry, SETTINGS, ExecutionDetailsTasks, ExecutionArtifactTab } from '@spinnaker/core';
+import { FindArtifactFromResourceStageConfig } from 'kubernetes/v2/pipelines/stages/findArtifactsFromResource/FindArtifactFromResourceStageConfig';
+import { findArtifactsFromResourceValidator } from 'kubernetes/v2/pipelines/stages/findArtifactsFromResource/findArtifactsFromResourceValidator';
 
-import { KubernetesV2FindArtifactsFromResourceConfigCtrl } from './findArtifactsFromResourceConfig.controller';
-import { KUBERNETES_MANIFEST_SELECTOR } from '../../../manifest/selector/selector.component';
-import { manifestSelectorValidators } from '../validators/manifestSelectorValidators';
+const STAGE_KEY = 'findArtifactsFromResource';
 
-export const KUBERNETES_FIND_ARTIFACTS_FROM_RESOURCE_STAGE =
-  'spinnaker.kubernetes.v2.pipeline.stage.findArtifactsFromResource';
-
-const STAGE_NAME = 'Find Artifacts From Resource (Manifest)';
-module(KUBERNETES_FIND_ARTIFACTS_FROM_RESOURCE_STAGE, [KUBERNETES_MANIFEST_SELECTOR])
-  .config(() => {
-    // Todo: replace feature flag with proper versioned provider mechanism once available.
-    if (SETTINGS.feature.artifacts) {
-      Registry.pipeline.registerStage({
-        label: STAGE_NAME,
-        description: 'Finds artifacts from a Kubernetes resource.',
-        key: 'findArtifactsFromResource',
-        cloudProvider: 'kubernetes',
-        templateUrl: require('./findArtifactsFromResourceConfig.html'),
-        controller: 'KubernetesV2FindArtifactsFromResourceConfigCtrl',
-        controllerAs: 'ctrl',
-        executionDetailsSections: [ExecutionDetailsTasks, ExecutionArtifactTab],
-        producesArtifacts: true,
-        validators: manifestSelectorValidators(STAGE_NAME),
-      });
-    }
-  })
-  .controller('KubernetesV2FindArtifactsFromResourceConfigCtrl', KubernetesV2FindArtifactsFromResourceConfigCtrl);
+Registry.pipeline.registerStage({
+  label: 'Find Artifacts From Resource (Manifest)',
+  description: 'Finds artifacts from a Kubernetes resource.',
+  key: STAGE_KEY,
+  cloudProvider: 'kubernetes',
+  component: FindArtifactFromResourceStageConfig,
+  executionDetailsSections: [ExecutionDetailsTasks, ExecutionArtifactTab],
+  producesArtifacts: true,
+  validateFn: findArtifactsFromResourceValidator,
+});

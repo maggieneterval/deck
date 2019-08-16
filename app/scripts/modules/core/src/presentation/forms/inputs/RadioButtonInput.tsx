@@ -15,7 +15,7 @@ interface IRadioButtonInputProps
   inline?: boolean;
 }
 
-interface IRadioButtonOptions extends Option {
+export interface IRadioButtonOptions extends Option {
   help?: React.ReactNode;
 }
 

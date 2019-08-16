@@ -1,61 +1,67 @@
 import * as React from 'react';
 import { defaults } from 'lodash';
 
-import { Application, IStage, IStageConfigProps } from '@spinnaker/core';
+import {
+  CheckboxInput,
+  FormikFormField,
+  FormikStageConfig,
+  HelpField,
+  IStageConfigProps,
+  NumberInput,
+} from '@spinnaker/core';
 
-import { ManifestSelector } from 'kubernetes/v2/manifest/selector/ManifestSelector';
-import { IManifestSelector, SelectorMode } from 'kubernetes/v2/manifest/selector/IManifestSelector';
+import { IResourceStage, ManifestSelector } from 'kubernetes/v2/manifest/selector/ManifestSelector';
+import { SelectorMode } from 'kubernetes/v2/manifest/selector/IManifestSelector';
 import { IDeleteOptions } from 'kubernetes/v2/manifest/delete/delete.controller';
-import DeleteManifestOptionsForm from 'kubernetes/v2/pipelines/stages/deleteManifest/DeleteManifestOptionsForm';
 
-export interface IKubernetesManifestStageConfigProps extends IStageConfigProps {
-  application: Application;
-  stage: IManifestSelector & IStage;
-  stageFieldUpdated: () => void;
+interface IDeleteResourceStage extends IResourceStage {
+  options: IDeleteOptions;
 }
 
-export class DeleteManifestStageConfig extends React.Component<IKubernetesManifestStageConfigProps> {
-  public componentDidMount = (): void => {
-    defaults(this.props.stage, {
-      app: this.props.application.name,
+export interface IKubernetesManifestStageConfigProps extends IStageConfigProps {
+  stage: IDeleteResourceStage;
+}
+
+export function DeleteManifestStageConfig(props: IKubernetesManifestStageConfigProps) {
+  const stage = React.useMemo(() => {
+    return defaults(props.stage, {
+      app: props.application.name,
       cloudProvider: 'kubernetes',
-    });
-    if (this.props.stage.isNew) {
-      this.props.stage.options = {
-        gracePeriodSeconds: null,
+      options: {
         cascading: true,
-      };
-    }
-    this.props.stageFieldUpdated();
-  };
+        gracePeriodSeconds: '',
+      },
+    });
+  }, []);
 
-  private onChange = (stage: IManifestSelector): void => {
-    Object.assign(this.props.stage, stage);
-    this.props.stageFieldUpdated();
-  };
-
-  private onOptionsChange = (options: IDeleteOptions): void => {
-    this.props.stage.options = options;
-    this.props.stageFieldUpdated();
-  };
-
-  public render() {
-    const selector = { ...this.props.stage };
-    return (
-      <div className="form-horizontal">
-        <h4>Manifest</h4>
-        <div className="horizontal-rule" />
-        <ManifestSelector
-          application={this.props.application}
-          selector={selector}
-          modes={[SelectorMode.Static, SelectorMode.Dynamic, SelectorMode.Label]}
-          onChange={this.onChange}
-          includeSpinnakerKinds={null}
-        />
-        <h4>Settings</h4>
-        <div className="horizontal-rule" />
-        <DeleteManifestOptionsForm onOptionsChange={this.onOptionsChange} options={this.props.stage.options} />
-      </div>
-    );
-  }
+  return (
+    <FormikStageConfig
+      {...props}
+      stage={stage}
+      onChange={props.updateStage}
+      render={({ application, formik }) => (
+        <div className="form-horizontal">
+          <ManifestSelector
+            application={application}
+            formik={formik}
+            modes={[SelectorMode.Static, SelectorMode.Dynamic, SelectorMode.Label]}
+          />
+          <h4>Deletion Settings</h4>
+          <div className="horizontal-rule" />
+          <FormikFormField
+            name="options.cascading"
+            label="Cascading"
+            help={<HelpField id="kubernetes.manifest.delete.cascading" />}
+            input={inputProps => <CheckboxInput {...inputProps} />}
+          />
+          <FormikFormField
+            name="options.gracePeriodSeconds"
+            label="Grace Period"
+            help={<HelpField id="kubernetes.manifest.delete.gracePeriod" />}
+            input={inputProps => <NumberInput {...inputProps} min={0} validation={null} />}
+          />
+        </div>
+      )}
+    />
+  );
 }

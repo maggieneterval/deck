@@ -188,7 +188,7 @@ const helpContents: { [key: string]: string } = {
       </p>
   `,
   'kubernetes.manifest.delete.gracePeriod': `
-      <p><i>(Optional)</i>The number of seconds given to the resource to terminate gracefully. Overrides what's set on the manifest if applicable.</p>
+      <p><i>(Optional) </i>The number of seconds given to the resource to terminate gracefully. Overrides what's set on the manifest if applicable.</p>
   `,
   'kubernetes.manifest.delete.cascading': `
       <p>When set, delete all resources managed by this resource as well (all pods owned by a replica set). When unset, this may orphan resources.</p>
