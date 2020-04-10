@@ -1,7 +1,6 @@
 import React from 'react';
 
 import { ExpectedArtifactService } from 'core/artifact';
-import { SETTINGS } from 'core/config';
 import { IExpectedArtifact, IPipeline } from 'core/domain';
 import { ReactSelectInput } from 'core/presentation';
 
@@ -35,11 +34,7 @@ export function BakeManifestStageForm({
   }, []);
 
   const templateRenderers = React.useMemo(() => {
-    const renderers = [...HELM_RENDERERS];
-    if (SETTINGS.feature.kustomizeEnabled) {
-      renderers.push(ManifestRenderers.KUSTOMIZE);
-    }
-    return renderers;
+    return [...HELM_RENDERERS, ManifestRenderers.KUSTOMIZE];
   }, []);
 
   return (
