@@ -1,8 +1,8 @@
-import { module, IQService, IPromise } from 'angular';
+import { IQService, IPromise } from 'angular';
 
 import { ISecurityGroup } from '@spinnaker/core';
 
-class KubernetesV2SecurityGroupTransformer {
+export class KubernetesSecurityGroupTransformer {
   public static $inject = ['$q'];
   constructor(private $q: IQService) {}
 
@@ -10,9 +10,3 @@ class KubernetesV2SecurityGroupTransformer {
     return this.$q.resolve(securityGroup);
   }
 }
-
-export const KUBERNETES_SECURITY_GROUP_TRANSFORMER = 'spinnaker.kubernetes.securityGroupTransformer';
-module(KUBERNETES_SECURITY_GROUP_TRANSFORMER, []).service(
-  'kubernetesV2SecurityGroupTransformer',
-  KubernetesV2SecurityGroupTransformer,
-);

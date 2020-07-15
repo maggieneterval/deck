@@ -10,7 +10,7 @@ import { KUBERNETES_UNDO_ROLLOUT_MANIFEST_STAGE } from './pipelines/stages/undoR
 import { KUBERNETES_FIND_ARTIFACTS_FROM_RESOURCE_STAGE } from './pipelines/stages/findArtifactsFromResource/findArtifactsFromResourceStage';
 import { KUBERNETES_LOAD_BALANCER_DETAILS_CTRL } from './loadBalancer/details/details.controller';
 import { KUBERNETES_SECURITY_GROUP_DETAILS_CTRL } from './securityGroup/details/details.controller';
-import { KUBERNETES_SERVER_GROUP_TRANSFORMER } from './serverGroup/serverGroupTransformer.service';
+import { KubernetesServerGroupTransformer } from './serverGroup/serverGroupTransformer.service';
 import { KUBERNETES_SERVER_GROUP_DETAILS_CTRL } from './serverGroup/details/details.controller';
 import { KUBERNETES_SERVER_GROUP_RESIZE_CTRL } from './serverGroup/details/resize/resize.controller';
 import { KUBERNETES_SERVER_GROUP_COMMAND_BUILDER } from './serverGroup/serverGroupCommandBuilder.service';
@@ -26,8 +26,8 @@ import { KUBERNETES_MANIFEST_LABELS } from './manifest/manifestLabels.component'
 import { KUBERNETES_MANIFEST_EVENTS } from './manifest/manifestEvents.component';
 import { KUBERNETES_MANIFEST_RESOURCES } from './manifest/manifestResources.component';
 import { KUBERNETES_MANIFEST_QOS } from './manifest/manifestQos.component';
-import { KUBERNETES_LOAD_BALANCER_TRANSFORMER } from './loadBalancer/transformer';
-import { KUBERNETES_SECURITY_GROUP_TRANSFORMER } from './securityGroup/transformer';
+import { KubernetesLoadBalancerTransformer } from './loadBalancer/transformer';
+import { KubernetesSecurityGroupTransformer } from './securityGroup/transformer';
 import { KUBERNETES_ANNOTATION_CUSTOM_SECTIONS } from './manifest/annotationCustomSections.component';
 import { KUBERNETES_RESOURCE_STATES } from './resources/resources.state';
 import { KUBERNETES_MANIFEST_IMAGE_DETAILS } from './manifest/manifestImageDetails.component';
@@ -60,7 +60,6 @@ module(KUBERNETES_MODULE, [
   KUBERNETES_SECURITY_GROUP_DETAILS_CTRL,
   KUBERNETES_SERVER_GROUP_COMMAND_BUILDER,
   KUBERNETES_SERVER_GROUP_DETAILS_CTRL,
-  KUBERNETES_SERVER_GROUP_TRANSFORMER,
   KUBERNETES_SERVER_GROUP_MANAGER_DETAILS_CTRL,
   KUBERNETES_SERVER_GROUP_RESIZE_CTRL,
   KUBERNETES_SERVER_GROUP_MANAGER_DETAILS_CTRL,
@@ -72,8 +71,6 @@ module(KUBERNETES_MODULE, [
   KUBERNETES_MANIFEST_STATUS,
   KUBERNETES_MANIFEST_CONDITION,
   KUBERNETES_MANIFEST_ARTIFACT,
-  KUBERNETES_LOAD_BALANCER_TRANSFORMER,
-  KUBERNETES_SECURITY_GROUP_TRANSFORMER,
   KUBERNETES_SCALE_MANIFEST_STAGE,
   KUBERNETES_UNDO_ROLLOUT_MANIFEST_STAGE,
   KUBERNETES_FIND_ARTIFACTS_FROM_RESOURCE_STAGE,
@@ -102,7 +99,7 @@ module(KUBERNETES_MODULE, [
       commandBuilder: 'kubernetesV2ServerGroupCommandBuilder',
       detailsController: 'kubernetesV2ServerGroupDetailsCtrl',
       detailsTemplateUrl: require('./serverGroup/details/details.html'),
-      transformer: 'kubernetesV2ServerGroupTransformer',
+      transformer: KubernetesServerGroupTransformer,
     },
     serverGroupManager: {
       detailsTemplateUrl: require('./serverGroupManager/details/details.html'),
@@ -112,14 +109,14 @@ module(KUBERNETES_MODULE, [
       CreateLoadBalancerModal: ManifestWizard,
       detailsController: 'kubernetesV2LoadBalancerDetailsCtrl',
       detailsTemplateUrl: require('./loadBalancer/details/details.html'),
-      transformer: 'kubernetesV2LoadBalancerTransformer',
+      transformer: KubernetesLoadBalancerTransformer,
     },
     securityGroup: {
       reader: KubernetesSecurityGroupReader,
       CreateSecurityGroupModal: ManifestWizard,
       detailsController: 'kubernetesV2SecurityGroupDetailsCtrl',
       detailsTemplateUrl: require('./securityGroup/details/details.html'),
-      transformer: 'kubernetesV2SecurityGroupTransformer',
+      transformer: KubernetesSecurityGroupTransformer,
     },
     instance: {
       detailsController: 'kubernetesV2InstanceDetailsCtrl',

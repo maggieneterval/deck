@@ -1,11 +1,11 @@
-import { module, IQService, IPromise } from 'angular';
+import { IQService, IPromise } from 'angular';
 import { chain, camelCase } from 'lodash';
 
 import { IServerGroup, IInstanceCounts } from '@spinnaker/core';
 
 import { IKubernetesLoadBalancer } from './details/IKubernetesLoadBalancer';
 
-class KubernetesV2LoadBalancerTransformer {
+export class KubernetesLoadBalancerTransformer {
   public static $inject = ['$q'];
   constructor(private $q: IQService) {}
 
@@ -51,9 +51,3 @@ class KubernetesV2LoadBalancerTransformer {
     return instanceCounts;
   }
 }
-
-export const KUBERNETES_LOAD_BALANCER_TRANSFORMER = 'spinnaker.kubernetes.loadBalancerTransformer';
-module(KUBERNETES_LOAD_BALANCER_TRANSFORMER, []).service(
-  'kubernetesV2LoadBalancerTransformer',
-  KubernetesV2LoadBalancerTransformer,
-);

@@ -1,7 +1,7 @@
-import { IPromise, IQService, module } from 'angular';
+import { IPromise, IQService } from 'angular';
 import { IKubernetesServerGroup } from './details/IKubernetesServerGroup';
 
-export class KubernetesV2ServerGroupTransformer {
+export class KubernetesServerGroupTransformer {
   public static $inject = ['$q'];
   constructor(private $q: IQService) {}
 
@@ -12,9 +12,3 @@ export class KubernetesV2ServerGroupTransformer {
     return this.$q.when(serverGroup);
   }
 }
-
-export const KUBERNETES_SERVER_GROUP_TRANSFORMER = 'spinnaker.kubernetes.serverGroup.transformer.service';
-module(KUBERNETES_SERVER_GROUP_TRANSFORMER, []).service(
-  'kubernetesV2ServerGroupTransformer',
-  KubernetesV2ServerGroupTransformer,
-);
