@@ -90,7 +90,6 @@ class KubernetesSecurityGroupDetailsController implements IController {
         ManifestReader.getManifest(accountId, region, name).then((manifest: IManifest) => {
           this.securityGroup = {
             ...rawSecurityGroup,
-            apiVersion: manifest.manifest.apiVersion,
             displayName: manifest.manifest.metadata.name,
             namespace: rawSecurityGroup.region,
           } as IKubernetesSecurityGroup;

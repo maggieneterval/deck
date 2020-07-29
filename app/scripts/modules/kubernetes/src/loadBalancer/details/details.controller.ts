@@ -78,7 +78,6 @@ class KubernetesLoadBalancerDetailsController implements IController {
       this.manifest = manifest;
       this.loadBalancer = {
         ...rawLoadBalancer,
-        apiVersion: manifest.manifest.apiVersion,
         displayName: manifest.manifest.metadata.name,
         namespace: rawLoadBalancer.region,
       };

@@ -5,7 +5,6 @@ export interface IKubernetesInstance extends IInstance {
   name: string;
   humanReadableName: string;
   displayName: string;
-  apiVersion: string;
   namespace: string;
   moniker: IMoniker;
 }

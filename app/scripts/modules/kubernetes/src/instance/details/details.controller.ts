@@ -95,7 +95,6 @@ class KubernetesInstanceDetailsController implements IController {
       ManifestReader.getManifest(instance.account, instance.namespace, instance.name).then((manifest: IManifest) => {
         this.instance = {
           ...instance,
-          apiVersion: manifest.manifest.apiVersion,
           displayName: manifest.manifest.metadata.name,
         };
         this.manifest = manifest;
