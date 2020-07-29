@@ -98,7 +98,7 @@ class KubernetesInstanceDetailsController implements IController {
         this.consoleOutputInstance = {
           account: this.instance.account,
           region: this.instance.region,
-          id: this.instance.humanReadableName,
+          id: this.instance.name,
           provider: this.instance.provider,
         };
         this.state.loading = false;
