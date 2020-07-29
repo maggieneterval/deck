@@ -164,7 +164,6 @@ class KubernetesServerGroupManagerDetailsController implements IController {
       this.manifest = manifest;
       this.serverGroupManager = {
         ...serverGroupManagerDetails,
-        displayName: manifest.manifest.metadata.name,
         namespace: serverGroupManagerDetails.region,
       };
       this.entityTagTargets = this.configureEntityTagTargets();

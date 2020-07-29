@@ -23,7 +23,7 @@
         width="'36px'"
       ></cloud-provider-logo>
       <h3 class="horizontal middle space-between flex-1" select-on-dbl-click>
-        {{ctrl.serverGroupManager.displayName}}
+        {{ctrl.manifest.manifest.metadata.name}}
         <render-if-feature feature="entityTags">
           <entity-notifications
             entity="ctrl.serverGroupManager"
