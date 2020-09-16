@@ -14,7 +14,7 @@ interface IGcePredictiveAutoscalingProps {
   updatePolicy: (policy: IGceAutoscalingPolicy) => void;
 }
 
-function GcePredictiveAutoscaling({ policy, updatePolicy }: IGcePredictiveAutoscalingProps) {
+export function GcePredictiveAutoscaling({ policy, updatePolicy }: IGcePredictiveAutoscalingProps) {
   if (!GCEProviderSettings.feature.predictiveAutoscaling) {
     return null;
   }
