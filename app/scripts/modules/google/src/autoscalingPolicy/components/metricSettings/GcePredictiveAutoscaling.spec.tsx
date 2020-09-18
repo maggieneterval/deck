@@ -10,8 +10,8 @@ describe('<GcePredictiveAutoscaling />', () => {
   afterEach(GCEProviderSettings.resetToOriginal);
   describe('Configuration', () => {
     it('Does not render if no feature config', () => {
-      // todo(mneterval): should not throw error
-      expect(() => shallow(<GcePredictiveAutoscaling policy={null} updatePolicy={noop} />)).toThrowError();
+      const wrapper = shallow(<GcePredictiveAutoscaling policy={null} updatePolicy={noop} />);
+      expect(wrapper.isEmptyRender()).toEqual(true);
     });
     it('Renders if feature flag is enabled', () => {
       GCEProviderSettings.feature = { predictiveAutoscaling: true };
