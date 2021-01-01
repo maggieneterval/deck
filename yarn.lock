@@ -372,9 +372,11 @@
     "@types/d3-voronoi" "*"
     "@types/d3-zoom" "*"
 
-"@types/dompurify@^0.0.29":
-  version "0.0.29"
-  resolved "https://registry.yarnpkg.com/@types/dompurify/-/dompurify-0.0.29.tgz#3a774b80a709848e560fbf9ea62d5f716e79b6f2"
+"@types/dompurify@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@types/dompurify/-/dompurify-2.1.0.tgz#b4fd9709871a543f1f0ce07766d7eb3e1469cc97"
+  dependencies:
+    "@types/trusted-types" "*"
 
 "@types/enzyme@^3.1.10":
   version "3.1.10"
@@ -518,6 +520,10 @@
 "@types/tether@*":
   version "1.4.3"
   resolved "https://registry.yarnpkg.com/@types/tether/-/tether-1.4.3.tgz#bbcb46a35dfbeeaaf60d60afaba3d872b6e1ebf5"
+
+"@types/trusted-types@*":
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@types/trusted-types/-/trusted-types-1.0.6.tgz#569b8a08121d3203398290d602d84d73c8dcf5da"
 
 "@types/uglify-js@*":
   version "2.6.28"
@@ -2632,7 +2638,7 @@ chain-function@^1.0.0:
 
 chalk@^0.5.1:
   version "0.5.1"
-  resolved "http://registry.npmjs.org/chalk/-/chalk-0.5.1.tgz#663b3a648b68b55d04690d49167aa837858f2174"
+  resolved "https://registry.npmjs.org/chalk/-/chalk-0.5.1.tgz#663b3a648b68b55d04690d49167aa837858f2174"
   dependencies:
     ansi-styles "^1.1.0"
     escape-string-regexp "^1.0.0"
