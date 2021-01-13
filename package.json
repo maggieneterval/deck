@@ -89,7 +89,7 @@
     "ui-select": "^0.19.6"
   },
   "devDependencies": {
-    "@types/angular": "1.6.26",
+    "@types/angular": "1.8.0",
     "@types/angular-mocks": "1.5.10",
     "@types/angular-ui-bootstrap": "^0.13.41",
     "@types/classnames": "^2.2.0",
