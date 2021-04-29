@@ -1,0 +1,32 @@
+version: 2
+updates:
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: lodash-es
+    versions:
+    - "> 4.17.4"
+  - dependency-name: "@types/angular"
+    versions:
+    - 1.8.0
+  - dependency-name: "@types/dompurify"
+    versions:
+    - 2.1.0
+  - dependency-name: moment-timezone
+    versions:
+    - 0.5.32
+  - dependency-name: fsevents
+    versions:
+    - 2.2.1
+  - dependency-name: webpack-node-externals
+    versions:
+    - 2.5.2
+  - dependency-name: lodash
+    versions:
+    - 4.17.20
+  - dependency-name: elliptic
+    versions:
+    - 6.5.3
