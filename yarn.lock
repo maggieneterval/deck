@@ -2632,7 +2632,7 @@ chain-function@^1.0.0:
 
 chalk@^0.5.1:
   version "0.5.1"
-  resolved "http://registry.npmjs.org/chalk/-/chalk-0.5.1.tgz#663b3a648b68b55d04690d49167aa837858f2174"
+  resolved "https://registry.npmjs.org/chalk/-/chalk-0.5.1.tgz#663b3a648b68b55d04690d49167aa837858f2174"
   dependencies:
     ansi-styles "^1.1.0"
     escape-string-regexp "^1.0.0"
@@ -6506,8 +6506,8 @@ homedir-polyfill@^1.0.1:
     parse-passwd "^1.0.0"
 
 hosted-git-info@^2.1.4:
-  version "2.4.2"
-  resolved "https://registry.yarnpkg.com/hosted-git-info/-/hosted-git-info-2.4.2.tgz#0076b9f46a270506ddbaaea56496897460612a67"
+  version "2.8.9"
+  resolved "https://registry.yarnpkg.com/hosted-git-info/-/hosted-git-info-2.8.9.tgz#dffc0bf9a21c02209090f2aa69429e1414daf3f9"
 
 hpack.js@^2.1.6:
   version "2.1.6"
